@@ -99,6 +99,73 @@ test('can be mixed into an object controller', function(assert) {
   assert.equal(get(controller, 'isValid'), true);
 });
 
+test('it correctly listens to `validations` property changes', function(assert) {
+  run(function() {
+    assert.ok(user);
+
+    user.set('validations', {
+      firstName: {
+        presence: true,
+        length: 3,
+      }
+    });
+
+    user.setProperties({
+      'firstName': '123',
+    });
+
+    user.validate().then(function() {
+      assert.equal(user.get('isValid'), true);
+    }, function() {
+      assert.ok(false, 'old rule was still applied');
+    });
+  });
+});
+
+test('it allows the `validations` property to a computed property', function(assert) {
+  run(function() {
+    User = Ember.Object.extend(EmberValidations.Mixin, {
+      validations: Ember.computed('lastNameOptional', function() {
+        if(this.get('lastNameOptional')) {
+          return {
+            firstName: {
+              presence: true,
+              length: true,
+            },
+          };
+        } else {
+          return {
+            firstName: {
+              presence: true,
+              length: 3,
+            },
+            lastName: {
+              presence: true,
+              length: 3,
+            },
+          };
+        }
+      })
+    });
+
+    user = User.create({
+      firstName: 'Mihai',
+
+      lastNameOptional: false,
+    });
+
+    user.validate().then(function() {
+      assert.equal(user.get('isValid'), false);
+
+      user.set('lastNameOptional', true);
+
+      user.validate().then(function() {
+        assert.equal(user.get('isValid'), true);
+      });
+    });
+  });
+});
+
 module('Array controller');
 
 test('can be mixed into an array controller', function(assert) {

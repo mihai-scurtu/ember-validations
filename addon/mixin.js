@@ -85,9 +85,10 @@ export default Ember.Mixin.create(setValidityMixin, {
     this._super();
     this.errors = Errors.create();
     this.dependentValidationKeys = {};
-    this.validators = Ember.A();
+    // this.validators = Ember.A();
+    set(this, 'validators', Ember.A());
     if (get(this, 'validations') === undefined) {
-      this.validations = {};
+      set(this, 'validations', {});
     }
     this.buildValidators();
     this.validators.forEach(function(validator) {
@@ -102,6 +103,10 @@ export default Ember.Mixin.create(setValidityMixin, {
       });
     }, this);
   },
+  refresh: Ember.observer('validations', function() {
+    console.log('refreshing');
+    this.init();
+  }),
   buildValidators: function() {
     var property;
 
